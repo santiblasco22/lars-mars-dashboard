@@ -4,67 +4,72 @@ import { useState, useMemo } from "react"
 import { useLars, NASAPhoto } from "@/lib/mars-context"
 import { TerrainSvg } from "../terrain-svg"
 
-const CAMERAS = ["Todas", "NAVCAM", "MAST", "FHAZ", "RHAZ"]
-
-const MOCK_PHOTOS: NASAPhoto[] = [
-  { id: 1, sol: 4498, camera: "NAVCAM", camera_full_name: "Navigation Camera", img_src: "", earth_date: "2024-01-01" },
-  { id: 2, sol: 4499, camera: "MAST", camera_full_name: "Mast Camera", img_src: "", earth_date: "2024-01-02" },
-  { id: 3, sol: 4500, camera: "FHAZ", camera_full_name: "Front Hazard Avoidance Camera", img_src: "", earth_date: "2024-01-03" },
-  { id: 4, sol: 4497, camera: "RHAZ", camera_full_name: "Rear Hazard Avoidance Camera", img_src: "", earth_date: "2023-12-31" },
-  { id: 5, sol: 4500, camera: "NAVCAM", camera_full_name: "Navigation Camera", img_src: "", earth_date: "2024-01-03" },
-  { id: 6, sol: 4499, camera: "MAST", camera_full_name: "Mast Camera", img_src: "", earth_date: "2024-01-02" },
-  { id: 7, sol: 4498, camera: "FHAZ", camera_full_name: "Front Hazard Avoidance Camera", img_src: "", earth_date: "2024-01-01" },
-  { id: 8, sol: 4497, camera: "RHAZ", camera_full_name: "Rear Hazard Avoidance Camera", img_src: "", earth_date: "2023-12-31" },
+const CAMERAS = ["Todas", "NAVCAM", "MAST", "FHAZ", "RHAZ", "FRONT_HAZCAM", "REAR_HAZCAM", "NAVCAM_LEFT", "NAVCAM_RIGHT", "MCZ_LEFT", "MCZ_RIGHT"]
+const ROVERS = [
+  { id: "all", label: "Ambos" },
+  { id: "perseverance", label: "Perseverance" },
+  { id: "curiosity", label: "Curiosity" },
 ]
 
 const INTEREST_BADGE: Record<string, { label: string; cls: string }> = {
-  alto:  { label: "Interes alto",  cls: "danger"  },
-  medio: { label: "Interes medio", cls: "warning" },
-  bajo:  { label: "Interes bajo",  cls: "success" },
+  alto:  { label: "Interés alto",  cls: "danger"  },
+  medio: { label: "Interés medio", cls: "warning" },
+  bajo:  { label: "Interés bajo",  cls: "success" },
+}
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function formatDate(dateStr: string) {
+  const [y, m, d] = dateStr.split("-")
+  return `${d}/${m}/${y}`
 }
 
 export function Superficie() {
-  const { photos, photosLoading, usedMock, photoAnalyses, setPhotoAnalysis } = useLars()
+  const {
+    photos, photosLoading, loadedDate, isExactDate,
+    selectedDate, setSelectedDate, clearSelectedDate,
+    selectedRover, setSelectedRover,
+    photoAnalyses, setPhotoAnalysis,
+  } = useLars()
 
   const [activeCamera, setActiveCamera] = useState("Todas")
-  const [solInput, setSolInput] = useState("")
-  const [solPhotos, setSolPhotos] = useState<NASAPhoto[] | null>(null)
-  const [solLoading, setSolLoading] = useState(false)
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [analysisLoading, setAnalysisLoading] = useState(false)
+  const [dateInput, setDateInput] = useState("")
 
-  const basePhotos: NASAPhoto[] = solPhotos ?? (photos.length > 0 ? photos : MOCK_PHOTOS)
-  const showMockBadge = usedMock && !solPhotos
+  const activeCameras = useMemo(() => {
+    const cams = [...new Set(photos.map(p => p.camera))]
+    return ["Todas", ...cams]
+  }, [photos])
 
   const filtered = useMemo(() => {
-    const list = activeCamera === "Todas" ? basePhotos : basePhotos.filter((p) => p.camera === activeCamera)
-    return list.slice(0, 20)
-  }, [basePhotos, activeCamera])
+    const list = activeCamera === "Todas" ? photos : photos.filter((p) => p.camera === activeCamera)
+    return list.slice(0, 30)
+  }, [photos, activeCamera])
 
-  const selectedPhoto = basePhotos.find((p) => p.id === selectedId)
+  const selectedPhoto = photos.find((p) => p.id === selectedId)
   const selectedAnalysis = selectedId != null ? photoAnalyses[selectedId] : null
 
-  async function handleSolSearch() {
-    const sol = solInput.trim()
-    if (!sol) { setSolPhotos(null); return }
-    setSolLoading(true)
-    setSolPhotos(null)
+  function handleDateSearch() {
+    if (!dateInput) return
+    setSelectedDate(dateInput)
     setSelectedId(null)
-    try {
-      const res = await fetch(`/api/nasa-photos?sol=${sol}`)
-      const data = await res.json()
-      setSolPhotos(data.photos ?? [])
-    } catch {
-      setSolPhotos([])
-    } finally {
-      setSolLoading(false)
-    }
+    setActiveCamera("Todas")
   }
 
-  function clearSolFilter() {
-    setSolInput("")
-    setSolPhotos(null)
+  function handleLatest() {
+    setDateInput("")
+    clearSelectedDate()
     setSelectedId(null)
+    setActiveCamera("Todas")
+  }
+
+  function handleRover(rover: string) {
+    setSelectedRover(rover)
+    setSelectedId(null)
+    setActiveCamera("Todas")
   }
 
   async function handleSelect(photo: NASAPhoto) {
@@ -82,16 +87,17 @@ export function Superficie() {
           cameraFullName: photo.camera_full_name,
           sol: photo.sol,
           earthDate: photo.earth_date,
+          rover: photo.rover,
         }),
       })
       const data = await res.json()
       setPhotoAnalysis(photo.id, {
-        analysis: data.analysis ?? "Analisis no disponible.",
+        analysis: data.analysis ?? "Análisis no disponible.",
         interest: data.interest ?? "medio",
       })
     } catch {
       setPhotoAnalysis(photo.id, {
-        analysis: "Analisis no disponible, intenta de nuevo.",
+        analysis: "Análisis no disponible, intentá de nuevo.",
         interest: "medio",
       })
     } finally {
@@ -100,45 +106,75 @@ export function Superficie() {
   }
 
   const isLoadingCurrent = analysisLoading && selectedId != null && !photoAnalyses[selectedId]
+  const dateLabel = !selectedDate
+    ? `Últimas disponibles · ${formatDate(loadedDate)}`
+    : isExactDate
+      ? formatDate(loadedDate)
+      : `Sin fotos para ${formatDate(selectedDate)}`
 
   return (
     <>
       <div className="superficie-header">
-        <h2 className="section-title" style={{ marginBottom: 0 }}>
-          Imagenes de superficie
-          {showMockBadge && <span className="mock-badge">Datos simulados</span>}
-        </h2>
-        <div className="sol-filter">
+        <div>
+          <h2 className="section-title" style={{ marginBottom: "0.25rem" }}>
+            Imágenes de superficie
+          </h2>
+          {!photosLoading && photos.length > 0 && (
+            <div style={{ fontSize: "0.75rem", color: "var(--color-text-tertiary)" }}>
+              {photos.length} fotos · {dateLabel}
+            </div>
+          )}
+        </div>
+
+        <div className="sol-filter" style={{ gap: "0.5rem" }}>
           <input
-            type="number"
+            type="date"
             className="sol-input"
-            placeholder="N de sol"
-            value={solInput}
-            onChange={(e) => setSolInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") handleSolSearch() }}
+            value={dateInput}
+            max={todayStr()}
+            onChange={(e) => setDateInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleDateSearch() }}
           />
-          <button className="sol-btn" onClick={handleSolSearch} disabled={solLoading}>
-            {solLoading ? "..." : "Buscar"}
+          <button className="sol-btn" onClick={handleDateSearch} disabled={photosLoading || !dateInput}>
+            {photosLoading ? "..." : "Buscar"}
           </button>
-          {solPhotos !== null && (
-            <button className="sol-clear" onClick={clearSolFilter}>x</button>
+          {selectedDate && (
+            <button className="sol-btn" onClick={handleLatest} style={{ background: "var(--color-accent)" }}>
+              Últimas
+            </button>
           )}
         </div>
       </div>
 
+      {/* Rover selector */}
       <div className="filter-chips" style={{ marginTop: "0.75rem" }}>
-        {CAMERAS.map((cam) => (
+        {ROVERS.map((r) => (
           <button
-            key={cam}
-            className={`filter-chip ${activeCamera === cam ? "active" : ""}`}
-            onClick={() => setActiveCamera(cam)}
+            key={r.id}
+            className={`filter-chip ${selectedRover === r.id ? "active" : ""}`}
+            onClick={() => handleRover(r.id)}
           >
-            {cam}
+            {r.label}
           </button>
         ))}
       </div>
 
-      {(photosLoading || solLoading) && (
+      {/* Cámara selector (dinámico según las fotos cargadas) */}
+      {!photosLoading && activeCameras.length > 1 && (
+        <div className="filter-chips" style={{ marginTop: "0.5rem" }}>
+          {activeCameras.map((cam) => (
+            <button
+              key={cam}
+              className={`filter-chip ${activeCamera === cam ? "active" : ""}`}
+              onClick={() => setActiveCamera(cam)}
+            >
+              {cam}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {photosLoading && (
         <div className="skeleton-grid">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="skeleton-card">
@@ -152,15 +188,25 @@ export function Superficie() {
         </div>
       )}
 
-      {!photosLoading && !solLoading && filtered.length === 0 && (
-        <div className="loading-state">No hay fotos para este filtro.</div>
+      {!photosLoading && photos.length === 0 && selectedDate && (
+        <div className="loading-state" style={{ flexDirection: "column", gap: "0.75rem" }}>
+          <span>No hay fotos disponibles para el {formatDate(selectedDate)}.</span>
+          <button className="sol-btn" onClick={handleLatest} style={{ background: "var(--color-accent)" }}>
+            Ver últimas disponibles
+          </button>
+        </div>
       )}
 
-      {!photosLoading && !solLoading && (
+      {!photosLoading && photos.length > 0 && filtered.length === 0 && (
+        <div className="loading-state">No hay fotos para esta cámara.</div>
+      )}
+
+      {!photosLoading && (
         <div className="photo-gallery-large">
           {filtered.map((photo, idx) => {
             const cached = photoAnalyses[photo.id]
             const interestData = cached ? (INTEREST_BADGE[cached.interest] ?? INTEREST_BADGE.medio) : null
+            const roverLabel = photo.rover === "perseverance" ? "Perseverance" : photo.rover === "curiosity" ? "Curiosity" : photo.rover
             return (
               <div
                 key={photo.id}
@@ -179,6 +225,7 @@ export function Superficie() {
                   <div className="photo-camera">{photo.camera}</div>
                   <div style={{ display: "flex", gap: "0.375rem", flexWrap: "wrap", marginTop: "0.25rem" }}>
                     <span className="badge info">{photo.earth_date}</span>
+                    <span className="badge secondary">{roverLabel}</span>
                     {interestData && (
                       <span className={`badge ${interestData.cls}`}>{interestData.label}</span>
                     )}
@@ -193,16 +240,19 @@ export function Superficie() {
       {selectedPhoto && (
         <div className="detail-panel">
           <div className="detail-title">
-            {selectedPhoto.camera_full_name} - Sol {selectedPhoto.sol}
+            {selectedPhoto.camera_full_name} — Sol {selectedPhoto.sol}
+            <span style={{ fontWeight: 400, fontSize: "0.8em", marginLeft: "0.5rem", textTransform: "capitalize" }}>
+              ({selectedPhoto.rover})
+            </span>
           </div>
           <div className="detail-meta">
-            Foto #{selectedPhoto.id} - {selectedPhoto.earth_date}
+            Foto #{selectedPhoto.id} · {selectedPhoto.earth_date}
             {selectedAnalysis && (
               <span
                 className={`badge ${INTEREST_BADGE[selectedAnalysis.interest]?.cls ?? "warning"}`}
                 style={{ marginLeft: "0.5rem" }}
               >
-                {INTEREST_BADGE[selectedAnalysis.interest]?.label ?? "Interes medio"}
+                {INTEREST_BADGE[selectedAnalysis.interest]?.label ?? "Interés medio"}
               </span>
             )}
           </div>
@@ -211,12 +261,12 @@ export function Superficie() {
               <>
                 <div className="skeleton-line skeleton-anim" style={{ width: "90%", marginBottom: "0.5rem" }} />
                 <div className="skeleton-line skeleton-anim" style={{ width: "75%", marginBottom: "0.5rem" }} />
-                <span className="loading-text">Claude esta analizando la imagen...</span>
+                <span className="loading-text">Claude está analizando la imagen...</span>
               </>
             ) : selectedAnalysis ? (
-              <><strong>Analisis IA:</strong> {selectedAnalysis.analysis}</>
+              <><strong>Análisis IA:</strong> {selectedAnalysis.analysis}</>
             ) : (
-              <span className="loading-text">Selecciona una foto para ver el analisis.</span>
+              <span className="loading-text">Seleccioná una foto para ver el análisis.</span>
             )}
           </div>
         </div>

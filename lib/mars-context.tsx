@@ -5,6 +5,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from "rea
 export interface NASAPhoto {
   id: number
   sol: number
+  rover: string
   camera: string
   camera_full_name: string
   img_src: string
@@ -39,10 +40,21 @@ export interface PhotoAnalysis {
   interest: string
 }
 
+function todayStr(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
 interface LarsContextType {
   photos: NASAPhoto[]
   photosLoading: boolean
   usedMock: boolean
+  loadedDate: string
+  isExactDate: boolean
+  selectedDate: string
+  setSelectedDate: (date: string) => void
+  clearSelectedDate: () => void
+  selectedRover: string
+  setSelectedRover: (rover: string) => void
   climate: ClimatePoint[]
   currentSol: number
   alerts: Alert[]
@@ -56,6 +68,13 @@ const LarsContext = createContext<LarsContextType>({
   photos: [],
   photosLoading: true,
   usedMock: false,
+  loadedDate: todayStr(),
+  isExactDate: false,
+  selectedDate: "",
+  setSelectedDate: () => {},
+  clearSelectedDate: () => {},
+  selectedRover: "all",
+  setSelectedRover: () => {},
   climate: [],
   currentSol: 4500,
   alerts: [],
@@ -94,6 +113,15 @@ export function LarsProvider({ children }: { children: React.ReactNode }) {
   const [photos, setPhotos] = useState<NASAPhoto[]>([])
   const [photosLoading, setPhotosLoading] = useState(true)
   const [usedMock, setUsedMock] = useState(false)
+  const [loadedDate, setLoadedDate] = useState(todayStr())
+  const [isExactDate, setIsExactDate] = useState(false)
+  // selectedDate vacío = cargar latest_photos; con valor = buscar esa fecha exacta
+  const [selectedDate, setSelectedDate] = useState("")
+  const [selectedRover, setSelectedRover] = useState("all")
+
+  function clearSelectedDate() {
+    setSelectedDate("")
+  }
   const [climate] = useState<ClimatePoint[]>(MOCK_CLIMATE)
   const [geology, setGeology] = useState<GeologicalFinding[]>([])
   const [geologyLoading, setGeologyLoading] = useState(false)
@@ -108,24 +136,35 @@ export function LarsProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function fetchPhotos() {
+      setPhotosLoading(true)
+      setPhotos([])
+      setGeology([])
       try {
-        const res = await fetch("/api/nasa-photos")
+        const params = new URLSearchParams({ rover: selectedRover })
+        if (selectedDate) params.set("earth_date", selectedDate)
+        const res = await fetch(`/api/nasa-photos?${params}`)
         const data = await res.json()
-        const fetched = data.photos ?? []
+        const fetched: NASAPhoto[] = data.photos ?? []
         if (fetched.length > 0) {
           setPhotos(fetched)
+          setLoadedDate(data.earth_date ?? selectedDate)
+          setIsExactDate(data.exact ?? false)
           setUsedMock(false)
         } else {
           setUsedMock(true)
+          setIsExactDate(false)
+          setLoadedDate(selectedDate || todayStr())
         }
       } catch {
         setUsedMock(true)
+        setIsExactDate(false)
+        setLoadedDate(selectedDate || todayStr())
       } finally {
         setPhotosLoading(false)
       }
     }
     fetchPhotos()
-  }, [])
+  }, [selectedDate, selectedRover])
 
   useEffect(() => {
     if (photos.length === 0 || geologyLoading || geology.length > 0) return
@@ -158,6 +197,13 @@ export function LarsProvider({ children }: { children: React.ReactNode }) {
         photos,
         photosLoading,
         usedMock,
+        loadedDate,
+        isExactDate,
+        selectedDate,
+        setSelectedDate,
+        clearSelectedDate,
+        selectedRover,
+        setSelectedRover,
         climate,
         currentSol,
         alerts,

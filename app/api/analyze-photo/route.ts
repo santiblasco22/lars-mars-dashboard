@@ -2,11 +2,12 @@ import { anthropic } from "@ai-sdk/anthropic"
 import { generateText } from "ai"
 
 export async function POST(req: Request) {
-  const { imgSrc, camera, cameraFullName, sol, earthDate } = await req.json()
+  const { imgSrc, camera, cameraFullName, sol, earthDate, rover } = await req.json()
+  const roverName = rover === "perseverance" ? "Perseverance" : rover === "curiosity" ? "Curiosity" : "Curiosity"
 
   if (!imgSrc) {
     return Response.json({
-      analysis: `Imagen de la cámara ${cameraFullName} (${camera}) del Sol ${sol}. Esta cámara documenta el terreno marciano para análisis científico y navegación del rover.`,
+      analysis: `Imagen de la cámara ${cameraFullName} (${camera}) del Sol ${sol} del rover ${roverName}. Esta cámara documenta el terreno marciano para análisis científico y navegación.`,
       interest: "medio",
     })
   }
@@ -24,7 +25,7 @@ export async function POST(req: Request) {
             },
             {
               type: "text",
-              text: `Analizá esta foto tomada por el rover Curiosity en Marte.
+              text: `Analizá esta foto tomada por el rover ${roverName} en Marte.
 Cámara: ${cameraFullName} (${camera})
 Sol: ${sol}
 Fecha terrestre: ${earthDate}
@@ -58,7 +59,7 @@ Respondé SOLO con JSON válido:
     return Response.json({ analysis: result.text, interest: "medio" })
   } catch {
     return Response.json({
-      analysis: `Imagen de la cámara ${cameraFullName} del Sol ${sol}. Esta cámara captura el terreno marciano para navegación y análisis científico.`,
+      analysis: `Imagen de la cámara ${cameraFullName} del Sol ${sol} (rover ${roverName}). Esta cámara captura el terreno marciano para navegación y análisis científico.`,
       interest: "medio",
     })
   }
