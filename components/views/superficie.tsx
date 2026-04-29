@@ -4,10 +4,13 @@ import { useState, useMemo } from "react"
 import { useLars, NASAPhoto } from "@/lib/mars-context"
 import { TerrainSvg } from "../terrain-svg"
 
-const CAMERAS = ["Todas", "NAVCAM", "MAST", "FHAZ", "RHAZ", "FRONT_HAZCAM", "REAR_HAZCAM", "NAVCAM_LEFT", "NAVCAM_RIGHT", "MCZ_LEFT", "MCZ_RIGHT"]
+function PhotoThumb({ src, alt, variant }: { src: string; alt: string; variant: number }) {
+  const [error, setError] = useState(false)
+  if (!src || error) return <TerrainSvg variant={variant} />
+  return <img src={src} alt={alt} onError={() => setError(true)} />
+}
+
 const ROVERS = [
-  { id: "all", label: "Ambos" },
-  { id: "perseverance", label: "Perseverance" },
   { id: "curiosity", label: "Curiosity" },
 ]
 
@@ -36,7 +39,7 @@ export function Superficie() {
 
   const [activeCamera, setActiveCamera] = useState("Todas")
   const [selectedId, setSelectedId] = useState<number | null>(null)
-  const [analysisLoading, setAnalysisLoading] = useState(false)
+  const [analyzingIds, setAnalyzingIds] = useState<Set<number>>(new Set())
   const [dateInput, setDateInput] = useState("")
 
   const activeCameras = useMemo(() => {
@@ -75,8 +78,9 @@ export function Superficie() {
   async function handleSelect(photo: NASAPhoto) {
     setSelectedId(photo.id)
     if (photoAnalyses[photo.id]) return
+    if (analyzingIds.has(photo.id)) return
 
-    setAnalysisLoading(true)
+    setAnalyzingIds((prev) => new Set(prev).add(photo.id))
     try {
       const res = await fetch("/api/analyze-photo", {
         method: "POST",
@@ -101,11 +105,11 @@ export function Superficie() {
         interest: "medio",
       })
     } finally {
-      setAnalysisLoading(false)
+      setAnalyzingIds((prev) => { const s = new Set(prev); s.delete(photo.id); return s })
     }
   }
 
-  const isLoadingCurrent = analysisLoading && selectedId != null && !photoAnalyses[selectedId]
+  const isLoadingCurrent = selectedId != null && analyzingIds.has(selectedId) && !photoAnalyses[selectedId]
   const dateLabel = !selectedDate
     ? `Últimas disponibles · ${formatDate(loadedDate)}`
     : isExactDate
@@ -214,11 +218,7 @@ export function Superficie() {
                 onClick={() => handleSelect(photo)}
               >
                 <div className="photo-placeholder">
-                  {photo.img_src ? (
-                    <img src={photo.img_src} alt={`Sol ${photo.sol} ${photo.camera}`} />
-                  ) : (
-                    <TerrainSvg variant={(idx % 6) + 1} />
-                  )}
+                  <PhotoThumb src={photo.img_src} alt={`Sol ${photo.sol} ${photo.camera}`} variant={(idx % 6) + 1} />
                 </div>
                 <div className="photo-info">
                   <div className="photo-sol">Sol {photo.sol}</div>

@@ -57,11 +57,12 @@ export function CompararTab() {
     }
   }
 
-  function PhotoSlot({ photo, idx }: { photo?: NASAPhoto; idx: number }) {
+  function PhotoSlot({ photo }: { photo?: NASAPhoto }) {
+    const [error, setError] = useState(false)
     return (
       <div className="compare-photo">
-        {photo?.img_src ? (
-          <img src={photo.img_src} alt={`Sol ${photo.sol} ${photo.camera}`} />
+        {photo?.img_src && !error ? (
+          <img src={photo.img_src} alt={`Sol ${photo.sol} ${photo.camera}`} onError={() => setError(true)} />
         ) : (
           <span className="compare-no-img">{photo?.camera ?? "Sin foto"}</span>
         )}
@@ -102,14 +103,14 @@ export function CompararTab() {
           <div className="compare-side-by-side">
             <div className="compare-column">
               <div className="compare-col-header">Sol {solA} ({photosA.length} fotos)</div>
-              {photosA.slice(0, 2).map((p, i) => <PhotoSlot key={p.id} photo={p} idx={i} />)}
-              {photosA.length === 0 && <PhotoSlot idx={0} />}
+              {photosA.slice(0, 2).map((p) => <PhotoSlot key={p.id} photo={p} />)}
+              {photosA.length === 0 && <PhotoSlot />}
             </div>
             <div className="compare-divider" />
             <div className="compare-column">
               <div className="compare-col-header">Sol {solB} ({photosB.length} fotos)</div>
-              {photosB.slice(0, 2).map((p, i) => <PhotoSlot key={p.id} photo={p} idx={i} />)}
-              {photosB.length === 0 && <PhotoSlot idx={0} />}
+              {photosB.slice(0, 2).map((p) => <PhotoSlot key={p.id} photo={p} />)}
+              {photosB.length === 0 && <PhotoSlot />}
             </div>
           </div>
 

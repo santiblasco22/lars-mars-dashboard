@@ -73,7 +73,7 @@ const LarsContext = createContext<LarsContextType>({
   selectedDate: "",
   setSelectedDate: () => {},
   clearSelectedDate: () => {},
-  selectedRover: "all",
+  selectedRover: "curiosity",
   setSelectedRover: () => {},
   climate: [],
   currentSol: 4500,
@@ -117,7 +117,7 @@ export function LarsProvider({ children }: { children: React.ReactNode }) {
   const [isExactDate, setIsExactDate] = useState(false)
   // selectedDate vacío = cargar latest_photos; con valor = buscar esa fecha exacta
   const [selectedDate, setSelectedDate] = useState("")
-  const [selectedRover, setSelectedRover] = useState("all")
+  const [selectedRover, setSelectedRover] = useState("curiosity")
 
   function clearSelectedDate() {
     setSelectedDate("")
