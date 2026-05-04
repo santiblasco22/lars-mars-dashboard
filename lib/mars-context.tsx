@@ -18,6 +18,10 @@ export interface ClimatePoint {
   min: number
   pressure: number
   wind: number
+  windDir: string
+  opacity: string
+  sunrise: string
+  sunset: string
 }
 
 export interface Alert {
@@ -89,13 +93,13 @@ export function useLars() {
 }
 
 const MOCK_CLIMATE: ClimatePoint[] = [
-  { sol: 4494, max: -18, min: -82, pressure: 751, wind: 14 },
-  { sol: 4495, max: -22, min: -80, pressure: 748, wind: 16 },
-  { sol: 4496, max: -25, min: -85, pressure: 745, wind: 12 },
-  { sol: 4497, max: -20, min: -78, pressure: 752, wind: 18 },
-  { sol: 4498, max: -19, min: -76, pressure: 749, wind: 20 },
-  { sol: 4499, max: -21, min: -79, pressure: 747, wind: 15 },
-  { sol: 4500, max: -23, min: -78, pressure: 748, wind: 18 },
+  { sol: 4874, max: -16, min: -79, pressure: 754, wind: 11, windDir: "NE", opacity: "Sunny", sunrise: "05:58", sunset: "18:12" },
+  { sol: 4875, max: -20, min: -82, pressure: 750, wind: 14, windDir: "NE", opacity: "Sunny", sunrise: "05:59", sunset: "18:11" },
+  { sol: 4876, max: -24, min: -86, pressure: 747, wind: 17, windDir: "N",  opacity: "Sunny", sunrise: "06:00", sunset: "18:11" },
+  { sol: 4877, max: -19, min: -80, pressure: 751, wind: 13, windDir: "NW", opacity: "Cloudy", sunrise: "06:01", sunset: "18:10" },
+  { sol: 4878, max: -17, min: -77, pressure: 753, wind: 19, windDir: "NW", opacity: "Sunny", sunrise: "06:01", sunset: "18:09" },
+  { sol: 4879, max: -22, min: -83, pressure: 748, wind: 15, windDir: "W",  opacity: "Sunny", sunrise: "06:02", sunset: "18:09" },
+  { sol: 4880, max: -21, min: -81, pressure: 749, wind: 16, windDir: "NW", opacity: "Sunny", sunrise: "06:03", sunset: "18:08" },
 ]
 
 function computeAlerts(climate: ClimatePoint[]): Alert[] {

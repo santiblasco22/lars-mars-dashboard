@@ -17,9 +17,8 @@ export function Topbar() {
       </div>
       <div className="topbar-chips">
         <span className="chip">Curiosity · Sol {currentSol}</span>
-        <span className="chip">Perseverance · Sol 1500</span>
         <span className={`chip ${photosLoading ? "" : "live"}`}>
-          {photosLoading ? "Cargando..." : "Datos en vivo"}
+          {photosLoading ? "Cargando…" : "Datos en vivo"}
         </span>
         {alerts.map((alert, i) => (
           <span key={i} className={`chip alert-${alert.type}`}>
@@ -27,6 +26,9 @@ export function Topbar() {
             {alert.message}
           </span>
         ))}
+      </div>
+      <div style={{ marginLeft: "auto", fontSize: "11px", color: "var(--color-text-tertiary)" }}>
+        Cráter Gale · Marte
       </div>
     </header>
   )

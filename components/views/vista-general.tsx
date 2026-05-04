@@ -1,27 +1,25 @@
 "use client"
 
+import { useState } from "react"
 import { useLars } from "@/lib/mars-context"
 import { TerrainSvg } from "../terrain-svg"
 
-const FALLBACK_PHOTOS = [
-  { id: 1, sol: 4498, camera: "NAVCAM", img_src: "", earth_date: "2024-01-01" },
-  { id: 2, sol: 4499, camera: "MAST", img_src: "", earth_date: "2024-01-02" },
-  { id: 3, sol: 4500, camera: "FHAZ", img_src: "", earth_date: "2024-01-03" },
-  { id: 4, sol: 4497, camera: "RHAZ", img_src: "", earth_date: "2023-12-31" },
-  { id: 5, sol: 4500, camera: "NAVCAM", img_src: "", earth_date: "2024-01-03" },
-  { id: 6, sol: 4499, camera: "MAST", img_src: "", earth_date: "2024-01-02" },
-]
+function PhotoThumb({ src, alt, variant }: { src: string; alt: string; variant: number }) {
+  const [error, setError] = useState(false)
+  if (!src || error) return <TerrainSvg variant={variant} />
+  return <img src={src} alt={alt} onError={() => setError(true)} />
+}
 
 const FALLBACK_ZONES = [
   {
-    name: "Formacion Murray",
+    name: "Formación Murray",
     description: "Capas sedimentarias, posible presencia de agua antigua",
     badge: "prioridad alta",
     badgeType: "danger",
   },
   {
-    name: "Crater Gale, sector NE",
-    description: "Acumulacion de oxido de hierro detectada esta semana",
+    name: "Cráter Gale, sector NE",
+    description: "Acumulación de óxido de hierro detectada esta semana",
     badge: "nuevo hallazgo",
     badgeType: "info",
   },
@@ -31,45 +29,39 @@ export function VistaGeneral() {
   const { photos, climate, geology, photosLoading, currentSol } = useLars()
 
   const last = climate[climate.length - 1]
-  const uvLevel = (last?.max ?? -23) > -15 ? "Alto" : "Moderado"
-  const uvClass = (last?.max ?? -23) > -15 ? "danger" : "warning"
-  const windDir = (last?.wind ?? 18) > 18 ? "Norte a Sur" : "Noroeste a Sureste"
+  const uvLevel = (last?.max ?? -21) > -15 ? "Alto" : "Moderado"
+  const uvClass = (last?.max ?? -21) > -15 ? "danger" : "warning"
 
-  const displayPhotos = photos.length > 0 ? photos.slice(0, 6) : FALLBACK_PHOTOS
+  const displayPhotos = photos.slice(0, 6)
   const displayZones =
     geology.length > 0
-      ? geology.slice(0, 2).map((z) => ({
-          name: z.name,
-          description: z.description,
-          badge: z.badge,
-          badgeType: z.badgeType,
-        }))
+      ? geology.slice(0, 2).map((z) => ({ name: z.name, description: z.description, badge: z.badge, badgeType: z.badgeType }))
       : FALLBACK_ZONES
 
   const stats = [
-    { label: "Temperatura", value: `${last?.max ?? -23}C / ${last?.min ?? -78}C`, subtext: "Maxima / minima del dia" },
-    { label: "Presion", value: `${last?.pressure ?? 748} Pa`, subtext: "Dentro del rango normal" },
-    { label: "Polvo atmosferico", value: "Moderado", subtext: "Tau 0.6" },
-    { label: "UV", value: uvLevel, subtext: "Sin nubes detectadas" },
+    { label: "Sol actual", value: String(currentSol), subtext: "Curiosity · Cráter Gale" },
+    { label: "Temperatura", value: `${last?.max ?? -21}° / ${last?.min ?? -81}°C`, subtext: "Máx. diurna / mín. nocturna" },
+    { label: "Presión", value: `${last?.pressure ?? 749} Pa`, subtext: "Dentro del rango normal" },
+    { label: "Índice UV", value: uvLevel, subtext: "Sin nubes detectadas", accent: uvClass },
   ]
 
   const climateCards = [
     {
       title: "Temperatura",
-      value: `${last?.max ?? -23}C / ${last?.min ?? -78}C`,
-      description: `Rango de ${Math.abs((last?.max ?? -23) - (last?.min ?? -78))}C entre dia y noche, mas extremo que cualquier desierto en la Tierra.`,
+      value: `${last?.max ?? -21}° / ${last?.min ?? -81}°C`,
+      description: `Rango de ${Math.abs((last?.max ?? -21) - (last?.min ?? -81))}°C entre día y noche — más extremo que cualquier desierto en la Tierra.`,
       progressColor: "info",
     },
     {
       title: "Viento",
-      value: `${last?.wind ?? 18} m/s`,
-      description: `Direccion: ${windDir}. Puede transportar polvo hacia el sector sur del Crater Gale.`,
+      value: `${last?.wind ?? 16} m/s`,
+      description: `Dirección: ${last?.windDir ?? "NW"}. Puede transportar polvo hacia el sector sur del Cráter Gale.`,
       progressColor: "warning",
     },
     {
-      title: "Radiacion UV",
+      title: "Radiación UV",
       value: uvLevel,
-      description: "Sin nubes hoy. El pico de radiacion fue a las 13:00 hora marciana.",
+      description: "Sin nubes hoy. El pico de radiación fue a las 13:00 hora marciana.",
       progressColor: uvClass,
     },
   ]
@@ -80,13 +72,13 @@ export function VistaGeneral() {
         {stats.map((stat) => (
           <div key={stat.label} className="stat-card">
             <div className="stat-label">{stat.label}</div>
-            <div className="stat-value">{stat.value}</div>
+            <div className={`stat-value ${stat.accent ? `uv-${stat.accent}` : ""}`}>{stat.value}</div>
             <div className="stat-subtext">{stat.subtext}</div>
           </div>
         ))}
       </div>
 
-      <h2 className="section-title">Galeria de fotos - Sol {currentSol}</h2>
+      <h2 className="section-title">Galería de fotos · Sol {currentSol}</h2>
 
       {photosLoading ? (
         <div className="skeleton-grid" style={{ marginBottom: "1.5rem" }}>
@@ -101,15 +93,11 @@ export function VistaGeneral() {
           ))}
         </div>
       ) : (
-        <div className="photo-gallery">
+        <div className="photo-gallery" style={{ marginBottom: "1.5rem" }}>
           {displayPhotos.map((photo, idx) => (
             <div key={photo.id} className="photo-card">
               <div className="photo-placeholder">
-                {photo.img_src ? (
-                  <img src={photo.img_src} alt={`Sol ${photo.sol} ${photo.camera}`} />
-                ) : (
-                  <TerrainSvg variant={(idx % 6) + 1} />
-                )}
+                <PhotoThumb src={photo.img_src} alt={`Sol ${photo.sol} ${photo.camera}`} variant={(idx % 6) + 1} />
               </div>
               <div className="photo-info">
                 <div className="photo-sol">Sol {photo.sol}</div>
@@ -122,7 +110,7 @@ export function VistaGeneral() {
       )}
 
       <h2 className="section-title">Clima</h2>
-      <div className="climate-grid">
+      <div className="climate-grid" style={{ marginBottom: "1.5rem" }}>
         {climateCards.map((card) => (
           <div key={card.title} className="climate-card">
             <div className="climate-title">{card.title}</div>
@@ -133,13 +121,14 @@ export function VistaGeneral() {
         ))}
       </div>
 
-      <h2 className="section-title">Zonas geologicas</h2>
+      <h2 className="section-title">Zonas geológicas</h2>
       <div className="zone-list">
         {displayZones.map((zone) => (
           <div key={zone.name} className="zone-item">
             <div className="zone-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M12 2L2 19h20L12 2z" />
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
               </svg>
             </div>
             <div className="zone-content">

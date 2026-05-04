@@ -1232,6 +1232,224 @@ html, body {
 .uv-danger { color: var(--color-text-danger); }
 .uv-warning { color: var(--color-text-warning); }
 
+/* ── View header (shared by Clima, Geología) ─────────────────────── */
+.view-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  gap: 1rem;
+}
+
+/* ── Clima — metric cards ──────────────────────────────────────────── */
+.climate-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.climate-metric-card {
+  background-color: var(--color-background-secondary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  padding: 0.875rem 1rem;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.climate-metric-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--border-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background-color: var(--color-background-tertiary);
+  color: var(--color-text-tertiary);
+}
+
+.climate-metric-icon svg { width: 15px; height: 15px; }
+
+.climate-metric-icon.temp-icon    { background-color: rgba(234, 88, 12, 0.12); color: var(--color-accent-light); }
+.climate-metric-icon.pressure-icon { background-color: rgba(96, 165, 250, 0.12); color: #60a5fa; }
+.climate-metric-icon.wind-icon    { background-color: rgba(251, 191, 36, 0.12); color: var(--color-text-warning); }
+.climate-metric-icon.uv-icon.warning { background-color: rgba(251, 191, 36, 0.12); color: var(--color-text-warning); }
+.climate-metric-icon.uv-icon.danger  { background-color: rgba(239, 68, 68, 0.12); color: var(--color-text-danger); }
+
+.climate-metric-body { flex: 1; min-width: 0; }
+
+.climate-metric-label {
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 0.25rem;
+}
+
+.climate-metric-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+  margin-bottom: 0.2rem;
+}
+
+.climate-metric-sub {
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+}
+
+/* ── Clima — secondary info row ────────────────────────────────────── */
+.climate-secondary-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.climate-secondary-card {
+  background-color: var(--color-background-secondary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+  padding: 0.75rem 1rem;
+}
+
+.climate-secondary-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 0.35rem;
+}
+
+.climate-secondary-value {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+/* ── Geología — finding cards v2 ───────────────────────────────────── */
+.findings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.finding-card-v2 {
+  background-color: var(--color-background-secondary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-left: 3px solid transparent;
+  border-radius: var(--border-radius-lg);
+  padding: 1rem 1.125rem;
+}
+
+.finding-meta-v2 {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  margin-bottom: 0.5rem;
+}
+
+.finding-coord {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+}
+
+.finding-sol-badge {
+  font-size: 10px;
+  padding: 0.1rem 0.4rem;
+  background-color: var(--color-background-tertiary);
+  border-radius: var(--border-radius-md);
+  color: var(--color-text-tertiary);
+}
+
+.expand-btn {
+  display: inline;
+  margin-left: 0.35rem;
+  font-size: 11px;
+  color: var(--color-accent-light);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Mineral tags v2 */
+.mineral-tag-v2 {
+  font-size: 10px;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+.mineral-tag-v2.danger   { background-color: var(--color-background-danger);  color: var(--color-text-danger); }
+.mineral-tag-v2.warning  { background-color: var(--color-background-warning); color: var(--color-text-warning); }
+.mineral-tag-v2.success  { background-color: var(--color-background-success); color: var(--color-text-success); }
+.mineral-tag-v2.info     { background-color: var(--color-background-info);    color: var(--color-text-info); }
+.mineral-tag-v2.secondary {
+  background-color: var(--color-background-tertiary);
+  color: var(--color-text-secondary);
+}
+
+/* Target zones */
+.target-zones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.target-zone-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--color-background-secondary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: var(--border-radius-lg);
+}
+
+.target-zone-rank {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: var(--color-accent-bg);
+  color: var(--color-accent-light);
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.target-zone-body { flex: 1; min-width: 0; }
+
+.target-zone-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  margin-bottom: 0.15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.target-zone-detail {
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+}
+
 /* UV scale bar */
 .uv-scale {
   height: 6px;
